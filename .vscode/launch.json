@@ -1,0 +1,86 @@
+{
+    "inputs": [
+        {
+            "id": "UI5Version",
+            "type": "command",
+            "command": "sap.ux.appGenerator.ui5Version"
+        }
+    ],
+    "configurations": [
+        {
+            "name": "Start mareaevento",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "cwd": "${workspaceFolder}/mareaevento",
+            "windows": {
+                "runtimeExecutable": "npx.cmd"
+            },
+            "runtimeArgs": [
+                "fiori",
+                "run"
+            ],
+            "args": [
+                "--open",
+                "'test/flpSandbox.html#comtasamareaevento-display'"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "port": 9229,
+            "env": {
+                "DEBUG": "--inspect"
+            }
+        },
+        {
+            "name": "Start mareaevento with UI5 Version",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npx",
+            "cwd": "${workspaceFolder}/mareaevento",
+            "windows": {
+                "runtimeExecutable": "npx.cmd"
+            },
+            "runtimeArgs": [
+                "fiori",
+                "run"
+            ],
+            "args": [
+                "--open",
+                "'test/flpSandbox.html#comtasamareaevento-display'",
+                "--",
+                "${input:UI5Version}"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "port": 9229,
+            "env": {
+                "DEBUG": "--inspect"
+            }
+        },
+        {
+            "name": "Start mareaevento Local",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/mareaevento",
+            "runtimeExecutable": "npx",
+            "windows": {
+                "runtimeExecutable": "npx.cmd"
+            },
+            "runtimeArgs": [
+                "fiori",
+                "run"
+            ],
+            "args": [
+                "--config",
+                "./ui5-local.yaml",
+                "--open",
+                "'test/flpSandbox.html#comtasamareaevento-display'"
+            ],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "port": 9229,
+            "env": {}
+        }
+    ],
+    "compounds": []
+}
