@@ -34,7 +34,7 @@ sap.ui.define([
             this.getModelo().setData(dataModelo);
             this.cargarMessagePopover();
             this.validaFechaNulaEvt();
-            this.cargarCombos();
+            await this.cargarCombos();
             await this.validarVista();
             BusyIndicator.hide();
         },
@@ -358,7 +358,7 @@ sap.ui.define([
             }
 
             //combo motivos de marea
-            TasaBackendService.obtenerDominio("ZDO_ZCDMMA").then(function (response) {
+            /*TasaBackendService.obtenerDominio("ZCDMMA").then(function (response) {
                 var sData = response.data[0].data;
                 var inprp = dataDetalleMarea.Cabecera.INPRP;
                 var items = [];
@@ -376,7 +376,29 @@ sap.ui.define([
                 modeloDetalleMarea.refresh();
             }).catch(function (error) {
                 console.log("ERROR: DetalleMarea.cargarCombos - ", error);
-            });
+            });*/
+
+            var motivosMarea = await TasaBackendService.obtenerDominio("ZCDMMA");
+            if(motivosMarea){
+                var sData = motivosMarea.data[0].data;
+                var inprp = dataDetalleMarea.Cabecera.INPRP;
+                var items = [];
+                if (inprp == "P") {
+                    items = sData
+                } else {
+                    for (let index = 0; index < sData.length; index++) {
+                        const element = sData[index];
+                        if (element.id == "1" || element.id == "2") {
+                            items.push(element);
+                        }
+                    }
+                }
+                dataDetalleMarea.Config.datosCombo.MotivosMarea = items;
+                modeloDetalleMarea.refresh();
+            }
+
+
+
 
             //combo ubicacion de pesca
             TasaBackendService.obtenerDominio("ZDO_ZINUBC").then(function (response) {

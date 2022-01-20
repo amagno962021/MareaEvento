@@ -64,7 +64,7 @@
 													<Label text=""/>
 												</form:label>
 												<form:fields>
-													<Link text="Crear Armador" press="onCrearArmador" />
+													<Link text="Crear Armador" press="onCrearArmador" visible="false"/>
 												</form:fields>
 											</form:FormElement>
 											<form:FormElement visible="{DetalleMarea>/Config/visibleArmadorRuc}">
