@@ -27,16 +27,21 @@ sap.ui.define([
 
     return MainComp.extend("com.tasa.mareaevento.controller.Marea", {
         onInit: async function () {
-            BusyIndicator.show(0);
+            //pprincipe inicio
+            var that = this;
+            var oModelDataModelo = that.getOwnerComponent()._getPropertiesToPropagate().oModels.DataModelo;            
+            //pprincipe fin
+            //BusyIndicator.show(0);
             this.oBundle = this.getOwnerComponent().getModel("i18n").getResourceBundle();
-            var oStore = jQuery.sap.storage(jQuery.sap.storage.Type.Session);
-            var dataModelo = oStore.get("DataModelo");
+            //var oStore = jQuery.sap.storage(jQuery.sap.storage.Type.Session);pprincipe
+            //var dataModelo = oStore.get("DataModelo");pprincipe
+            var dataModelo = oModelDataModelo.getData();
             this.getModelo().setData(dataModelo);
             this.cargarMessagePopover();
             this.validaFechaNulaEvt();
             await this.cargarCombos();
             await this.validarVista();
-            BusyIndicator.hide();
+            //BusyIndicator.hide();
         },
 
         cargarMessagePopover: function () {
@@ -55,7 +60,7 @@ sap.ui.define([
                     template: oMessageTemplate
                 }
             });
-            this.byId("messagePopoverBtn").addDependent(oMessagePopover);
+            //this.byId("messagePopoverBtn").addDependent(oMessagePopover);
         },
 
         handleMessagePopoverPress: function (oEvent) {

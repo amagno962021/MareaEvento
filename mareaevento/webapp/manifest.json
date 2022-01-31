@@ -2,12 +2,13 @@
     "_version": "1.32.0",
     "sap.app": {
         "id": "com.tasa.mareaevento",
-        "type": "application",
+        "type": "component",
         "i18n": "i18n/i18n.properties",
+        "title": "{{appTitle}}",
         "applicationVersion": {
             "version": "0.0.1"
         },
-        "title": "{{appTitle}}",
+        "embeddedBy": "../",
         "description": "{{appDescription}}",
         "crossNavigation": {
             "inbounds": {

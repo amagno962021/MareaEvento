@@ -8,7 +8,7 @@
 	height="100%">
 	<!-- <App> removed -->
 	<!--	<pages> removed -->
-	<Page title="Ingresar datos" showNavButton="true" navButtonPress="onBackListMarea" showFooter="true">
+	<Page title="Ingresar datos">
 		<content>
 			<layout:VerticalLayout width="100%" visible="true">
 				<layout:content>
@@ -857,7 +857,8 @@
 		<footer>
 			<OverflowToolbar width="100%" height="46px" design="Auto" enabled="true" visible="true">
 				<content>
-					<Button id="messagePopoverBtn" icon="{ path: '/', formatter: 'buttonIconFormatter' }" type="{ path: '/', formatwter: 'buttonTypeFormatter' }" text= "{path: '/', formatter: 'highestSeverityMessages' }" press="handleMessagePopoverPress"/>
+					<Button id="messagePopoverBtn" icon="sap-icon://message-information" type="Accept" text= "Info" press="handleMessagePopoverPress"/>
+<!--<Button id="messagePopoverBtn" icon="{ path: '/', formatter: 'buttonIconFormatter' }" type="{ path: '/', formatwter: 'buttonTypeFormatter' }" text= "{path: '/', formatter: 'highestSeverityMessages' }" press="handleMessagePopoverPress"/>-->
 					<ToolbarSpacer width=""/>
 					<Button text="Guardar" type="Emphasized" icon="sap-icon://save" iconFirst="true" width="auto" enabled="true" visible="false"
 								iconDensityAware="false" press="onSave"/>

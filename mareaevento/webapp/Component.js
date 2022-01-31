@@ -17,14 +17,14 @@ sap.ui.define([
              * @override
              */
             init: function () {
+                // set the device model
+                this.setModel(models.createDeviceModel(), "device");
+
                 // call the base component's init function
                 UIComponent.prototype.init.apply(this, arguments);
 
                 // enable routing
-                this.getRouter().initialize();
-
-                // set the device model
-                this.setModel(models.createDeviceModel(), "device");
+                this.getRouter().initialize();              
 
                 // set detalle marea model
                 this.setModel(models.createInitModel(), "DetalleMarea");
