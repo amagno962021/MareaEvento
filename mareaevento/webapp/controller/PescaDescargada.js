@@ -4,7 +4,7 @@ sap.ui.define([
     'sap/ui/model/Filter',
     "sap/ui/core/syncStyleClass",
     'sap/ui/core/Fragment',
-	"sap/ui/base/ManagedObject",
+    "sap/ui/base/ManagedObject",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
     "sap/ui/integration/library",
@@ -14,9 +14,11 @@ sap.ui.define([
     "./Horometro",
     "./PescaDeclarada",
     "./Siniestro",
-    "./Utils"
-], function(
-	TasaBackendService,
+    "./Utils",
+    'sap/f/library',
+    'sap/ui/core/BusyIndicator',
+], function (
+    TasaBackendService,
     FilterOperator,
     Filter,
     syncStyleClass,
@@ -31,11 +33,13 @@ sap.ui.define([
     Horometro,
     PescaDeclarada,
     Siniestro,
-    Utils
+    Utils,
+    fioriLibrary,
+    BusyIndicator
 ) {
-	"use strict";
+    "use strict";
 
-	return ManagedObject.extend("com.tasa.mareaevento.controller.PescaDescargada", {
+    return ManagedObject.extend("com.tasa.mareaevento.controller.PescaDescargada", {
 
         constructor: function (oView, sFragName,o_this) {
 
@@ -50,7 +54,7 @@ sap.ui.define([
             this._controler = o_this;
             this._TipoPesca = [];
             this._Estado = [];
-            this._modelosPescaDescargada = {"Estado":"","NomPlanta":"","CodPlanta":"","NomEmb":"","Matricula":"","CodEmb":"","TipoPescaSel":"","FechaInicio" : "", "HoraInicio" : "","ListaDescargas":[], "TipoPesca" : [], "ListaEstado":[]}
+            this._modelosPescaDescargada = {"det_Descarga":"","det_Ticket":"","det_TipoPesca":"","det_Planta":"","det_DesPlanta":"","det_Emba":"","det_DesEmba":"","det_Especie":"","det_DesEspecie":"","det_Lado":"","det_CantPesca":"","det_FechaIni":"","det_FechaFin":"","det_Estado":"","det_Header":"","Estado":"","NomPlanta":"","CodPlanta":"","NomEmb":"","Matricula":"","CodEmb":"","TipoPescaSel":"","FechaInicio" : "", "HoraInicio" : "","ListaDescargas":[], "TipoPesca" : [], "ListaEstado":[]};
 
             var Popup_Descarga_Modelo = new JSONModel();
             this._oView.setModel(Popup_Descarga_Modelo, "popup_descarga");
@@ -79,7 +83,7 @@ sap.ui.define([
                     cantTotal += cantPesca;
                     if (cantPesca > capaMaxim) {
                         bOk = false;
-                        mensaje = this.oBundle.getText("CAPABODEGASUPER");
+                        mensaje = this.oBundle.getText("CAPABODEGASUPER", [element.DSBOD]);
                         this._controler.agregarMensajeValid("Error", mensaje);
                         break;
                     }
@@ -139,7 +143,7 @@ sap.ui.define([
                     //     });
                     // }
                 } else {
-                    mensaje = this.oBundle.getText("BODDECPESCANODEC");
+                    let mensaje = this.oBundle.getText("BODDECPESCANODEC");
                     this._controler.agregarMensajeValid("Error", mensaje);
                 }
                 bOk = false;
@@ -212,7 +216,7 @@ sap.ui.define([
                         this._controler.Dat_PescaDeclarada.calcularCantTotalPescDeclEve();
                     }
                     if(bOk){
-                        this._controler.Dat_PescaDeclarada.validarCantidadTotalPesca();
+                        bOk = await this._controler.Dat_PescaDeclarada.validarCantidadTotalPesca();
                     }
                     if(bOk){
                         bOk = this._controler.Dat_General.validarIncidental();
@@ -279,13 +283,16 @@ sap.ui.define([
                 if(bOk && tipoEvento == "6"){
                     visible.VisibleDescarga = false;
                     visible.FechFin = false;
-                    bOk = this.validarPescaDescargada();
-                    if(eventoActual.ListaPescaDescargada[0].CantPescaModificada){
-                        eventoActual.CantTotalPescDescM = eventoActual.ListaPescaDescargada[0].CantPescaModificada;
-                    }else{
-                        eventoActual.CantTotalPescDescM = null;
+                    if(eventoActual.ListaPescaDescargada.length > 0){
+                        bOk = this.validarPescaDescargada();
+                        if(eventoActual.ListaPescaDescargada[0].CantPescaModificada){
+                            eventoActual.CantTotalPescDescM = eventoActual.ListaPescaDescargada[0].CantPescaModificada;
+                        }else{
+                            eventoActual.CantTotalPescDescM = null;
+                        }
+                        this.obtenerTipoDescarga(eveActual);
                     }
-                    this.obtenerTipoDescarga(eveActual);
+                    
                 }
 
                 if(bOk && tipoEvento == "8"){
@@ -448,30 +455,57 @@ sap.ui.define([
         },
 
         buscarDescarga: async function (oEvent) {
+            //SETEO DE DETALLE VACIO
+            this._oView.getModel("popup_descarga").setProperty("/det_Descarga", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Ticket", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_TipoPesca", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Planta", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_DesPlanta", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Emba", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_DesEmba", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Especie", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_DesEspecie", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Lado", "D");
+            this._oView.getModel("popup_descarga").setProperty("/det_CantPesca", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_FechaIni", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_FechaFin", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Estado", "");
+            this._oView.getModel("popup_descarga").setProperty("/det_Header", "");
+            //-------------------------
             await this.obtenerTipoPesca();
             await this.obtenerEstadoDesc();
+            var indActual = this._controler._elementAct;//indicie actual de la lista de eventos
+            var ListaEventos = this._controler._listaEventos; // mapear modelo de lista de eventos
+            var eventosElement = ListaEventos[indActual - 1];
+            var fechaIni = eventosElement.FIEVN;
+            var horaIni = eventosElement.HIEVN;
+            var eveVisFechaFin = ["3", "6", "7"];
+            if (eveVisFechaFin.includes(eventosElement.CDTEV)) {
+                fechaIni = eventosElement.FFEVN;
+                horaIni = eventosElement.HFEVN;
+            }
             this._oView.getModel("popup_descarga").setProperty("/TipoPesca", this._TipoPesca.data);
             this._oView.getModel("popup_descarga").setProperty("/ListaEstado", this._Estado.data);
             if(this._controler._motivoMarea == "1"){
                 this._oView.getModel("popup_descarga").setProperty("/TipoPescaSel", "D");
-                this._oView.getModel("popup_descarga").setProperty("/FechaInicio", this._controler._listaEventos[this._controler._elementAct].FechProduccion);
+                this._oView.getModel("popup_descarga").setProperty("/FechaInicio", fechaIni);
                 this._oView.getModel("popup_descarga").setProperty("/CodEmb", this._controler._FormMarea.CDEMB);
                 this._oView.getModel("popup_descarga").setProperty("/Matricula", this._controler._FormMarea.MREMB);
                 this._oView.getModel("popup_descarga").setProperty("/NomEmb", this._controler._FormMarea.NMEMB);
                 this._oView.getModel("popup_descarga").setProperty("/CodPlanta", "FP12");
                 this._oView.getModel("popup_descarga").setProperty("/NomPlanta", "TASA CHD");
                 this._oView.getModel("popup_descarga").setProperty("/Estado", "N");
-                this._oView.getModel("popup_descarga").setProperty("/HoraInicio", this._controler._listaEventos[this._controler._elementAct].HIEVN);
+                this._oView.getModel("popup_descarga").setProperty("/HoraInicio", horaIni);
 
             }else if(this._controler._motivoMarea == "2"){
                 this._oView.getModel("popup_descarga").setProperty("/TipoPescaSel", "I");
-                this._oView.getModel("popup_descarga").setProperty("/FechaInicio", this._controler._listaEventos[this._controler._elementAct].FechProduccion);
+                this._oView.getModel("popup_descarga").setProperty("/FechaInicio", fechaIni);
                 this._oView.getModel("popup_descarga").setProperty("/CodEmb", this._controler._FormMarea.CDEMB);
                 this._oView.getModel("popup_descarga").setProperty("/Matricula", this._controler._FormMarea.MREMB);
                 this._oView.getModel("popup_descarga").setProperty("/NomEmb", this._controler._FormMarea.NMEMB);
                 this._oView.getModel("popup_descarga").setProperty("/CodPlanta", this._controler._listaEventos[this._controler._elementAct].WERKS);
                 this._oView.getModel("popup_descarga").setProperty("/NomPlanta", this._controler._listaEventos[this._controler._elementAct].DESCR);
-                this._oView.getModel("popup_descarga").setProperty("/HoraInicio", this._controler._listaEventos[this._controler._elementAct].HIEVN);
+                this._oView.getModel("popup_descarga").setProperty("/HoraInicio", horaIni);
                 this._oView.getModel("popup_descarga").setProperty("/Estado", "N");
                 
 
@@ -499,6 +533,7 @@ sap.ui.define([
         },
 
         consultarDescarga: async function () {
+            BusyIndicator.show(0);
             let options = [];
             let comandos = [];
             let option = [];
@@ -607,7 +642,7 @@ sap.ui.define([
           
             }
             console.log(this._controler._nroEvento);
-            let s = await this.cargar_servicios_pescaDesc(matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, this._controler.getCurrentUser(),nro_descarga);
+            let s = await this.cargar_servicios_pescaDesc(matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, this._controler.getCurrentUser(),nro_descarga,estado);
             let listaDes_RFC = JSON.parse(this._DataPopup[0]).data;
             let lista_popup = []
             for (let index = 0; index < listaDes_RFC.length; index++) {
@@ -622,7 +657,7 @@ sap.ui.define([
             }
             this._oView.getModel("popup_descarga").setProperty("/ListaDescargas", lista_popup);
             this._oView.getModel("popup_descarga").updateBindings(true);
-
+            BusyIndicator.hide();
 
         },
         obtenerTipoPesca: async function () {
@@ -715,9 +750,9 @@ sap.ui.define([
 
         },
 
-        cargar_servicios_pescaDesc :function (matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, user,nro_descarga){
+        cargar_servicios_pescaDesc :function (matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, user,nro_descarga,estado){
             let self = this;
-            var s1 = TasaBackendService.obtenerListaDescargaPopUp(matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, user,nro_descarga);
+            var s1 = TasaBackendService.obtenerListaDescargaPopUp(matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, user,nro_descarga,estado);
             return Promise.all([s1]).then(values => {
                 self._DataPopup = values;
                 console.log(self._DataPopup);
@@ -749,18 +784,19 @@ sap.ui.define([
             ListaPescDesc.DSSPC = data.DSSPC;
             ListaPescDesc.CNPDS = data.CNPDS;
             this._oView.getModel("eventos").updateBindings(true);
-            if(this._controler._motivoMarea == "1"){
-                //this._controler.distribuirDatosDescarga(data);
-                this._controler.distribuirDatosDescargaCHD(data);
-            }else if(this._controler._motivoMarea == "2"){
-                //this._controler.distribuirDatosDescargaCHD(data);
-                this._controler.distribuirDatosDescarga(data);
-            }
+            this._controler.distribuirDatosDescarga(data);
+            // if(this._controler._motivoMarea == "1"){
+            //     //this._controler.distribuirDatosDescarga(data);
+            //     this._controler.distribuirDatosDescargaCHD(data);
+            // }else if(this._controler._motivoMarea == "2"){
+            //     //this._controler.distribuirDatosDescargaCHD(data);
+            //     this._controler.distribuirDatosDescarga(data);
+            // }
 
             this.getDialogConsultaDescarga().close();
             //console.log("Holaaaaaaaaaaaaaa");
         },
-        eliminarDesacarga: function(event){
+        eliminarDesacarga: async function(event){
             let pescaDesc = this._oView.getModel("eventos").getData().ListaPescaDescargada;
             let desc = pescaDesc[0].Nro_descarga;
             let self = this;
@@ -808,7 +844,7 @@ sap.ui.define([
                 let sResponsivePaddingClasses = "sapUiResponsivePadding--header sapUiResponsivePadding--content sapUiResponsivePadding--footer";
                 if (this._controler._listaEventos[this._controler._elementAct].INPRP == "T") {
 					MessageBox.show(
-                        '�Realmente desea eliminar el registro de pesca descargada?',
+                        'Realmente desea eliminar el registro de pesca descargada?',
                         {
                             icon: MessageBox.Icon.WARNING,
                             title: "Eliminar pesca descargada",
@@ -825,7 +861,7 @@ sap.ui.define([
 				} else if (this._controler._listaEventos[this._controler._elementAct].INPRP =="P") { //Descarga en planta propia
 					if (this._controler._motivoMarea == "1") {
 						MessageBox.show(
-                            '�Realmente desea eliminar el registro de pesca descargada?',
+                            'Realmente desea eliminar el registro de pesca descargada?',
                             {
                                 icon: MessageBox.Icon.WARNING,
                                 title: "Eliminar pesca descargada",
@@ -840,21 +876,26 @@ sap.ui.define([
                             }
                         );
 					} else if (this._controler._motivoMarea == "2") {
-						MessageBox.show(
-                            '�Realmente desea eliminar el registro de pesca descargada?,\n este proceso es irreversible y puede durar varios minutos.',
-                            {
-                                icon: MessageBox.Icon.WARNING,
-                                title: "Eliminar pesca descargada",
-                                actions: [MessageBox.Action.OK, MessageBox.Action.NO],
-                                emphasizedAction: MessageBox.Action.OK,
-                                styleClass: sResponsivePaddingClasses,
-                                onClose: function (sAction) {
-                                    if(sAction == "OK"){
-                                        self.eliminarPescaDescargada();
+                        if(await this._controler.verificarCambiosDescarga_eve(this._controler._elementAct, this)){
+                            MessageBox.show(
+                                'Realmente desea eliminar el registro de pesca descargada?,\n este proceso es irreversible y puede durar varios minutos.',
+                                {
+                                    icon: MessageBox.Icon.WARNING,
+                                    title: "Eliminar pesca descargada",
+                                    actions: [MessageBox.Action.OK, MessageBox.Action.NO],
+                                    emphasizedAction: MessageBox.Action.OK,
+                                    styleClass: sResponsivePaddingClasses,
+                                    onClose: function (sAction) {
+                                        if(sAction == "OK"){
+                                            self.eliminarPescaDescargada();
+                                        }
                                     }
                                 }
-                            }
-                        );
+                            );
+                        }else{
+                            MessageBox.error(this.oBundle.getText("NOANULDESCARGA"));
+                        }
+						
 					}
 				}
                 
@@ -938,8 +979,31 @@ sap.ui.define([
                     }).catch(reason => { return false; })
             return consulta;
 
+        },
+        onListItemPress :function (event){
+            let mod = event.getSource().getBindingContext("popup_descarga");
+            let data  =mod.getObject();
+
+            this._oView.getModel("popup_descarga").setProperty("/det_Descarga", data.NRDES);
+            this._oView.getModel("popup_descarga").setProperty("/det_Ticket", data.TICKE);
+            this._oView.getModel("popup_descarga").setProperty("/det_TipoPesca", data.DESC_CDTPC);
+            this._oView.getModel("popup_descarga").setProperty("/det_Planta", data.WEPTA);
+            this._oView.getModel("popup_descarga").setProperty("/det_DesPlanta", data.DSPTA);
+            this._oView.getModel("popup_descarga").setProperty("/det_Emba", data.CDEMB);
+            this._oView.getModel("popup_descarga").setProperty("/det_DesEmba", data.NMEMB);
+            this._oView.getModel("popup_descarga").setProperty("/det_Especie", data.CDSPC);
+            this._oView.getModel("popup_descarga").setProperty("/det_DesEspecie",data.DSSPC);
+            this._oView.getModel("popup_descarga").setProperty("/det_Lado", data.CDLDS);
+            this._oView.getModel("popup_descarga").setProperty("/det_CantPesca", data.CNPDS);
+            this._oView.getModel("popup_descarga").setProperty("/det_FechaIni", data.FIDES + " " + data.HIDES);
+            this._oView.getModel("popup_descarga").setProperty("/det_FechaFin", data.FFDES + " " + data.HFDES);
+            this._oView.getModel("popup_descarga").setProperty("/det_Estado", data.DESC_ESDES);
+            this._oView.getModel("popup_descarga").setProperty("/det_Header", data.CDPTA);
+
+            //console.log("Holaaaaaaaaaaaaaa");
         }
 
 
-	});
+
+    });
 });

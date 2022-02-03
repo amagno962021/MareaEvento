@@ -19,7 +19,7 @@ sap.ui.define([
             var oStore = jQuery.sap.storage(jQuery.sap.storage.Type.session);
             let flag = oStore.get("flagFragment");
             if(flag){
-                this._oControl = sap.ui.xmlfragment(oView.getId(), "com.tasa.registroeventospescav2.fragments."+ sFragName,this);
+                this._oControl = sap.ui.xmlfragment(oView.getId(), "com.tasa.mareaevento.fragments."+ sFragName,this);
             }
             this._bInit = false;
 
@@ -32,8 +32,5 @@ sap.ui.define([
         getcontrol:function(){
             return this._oControl;
         }
-
-
-
 	});
 });

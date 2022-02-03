@@ -41,12 +41,12 @@ sap.ui.define([
             return data;
         },
 
-        cargarListaMareas: function (sUsuario) {
+        cargarListaMareas: async function (sUsuario) {
             var uri = UtilService.getHostService() + "/api/embarcacion/ObtenerFlota";
             var arg = {
                 usuario: sUsuario
             };
-            var data = this.http(uri).get(null, arg).then(function (response) {
+            var data = await this.http(uri).get(null, arg).then(function (response) {
                 var data = JSON.parse(response);
                 var sData = JSON.parse(data);
                 return sData;
@@ -76,6 +76,20 @@ sap.ui.define([
             var uri = UtilService.getHostService() + "/api/dominios/Listar";
             var sBody = UtilService.getBodyDominio();
             sBody.dominios[0].domname = dominio;
+            var data = await this.http(uri).post(null, sBody).then(function (response) {
+                var data = JSON.parse(response);
+                return data;
+            }).catch(function(error){
+                console.log("ERROR: TasaBackendService.obtenerDominio: ", error);
+                return null;
+            });
+            return data;
+        },
+
+        obtenerDominioVarios: async function(listaDominios){
+            var uri = UtilService.getHostService() + "/api/dominios/Listar";
+            var sBody = UtilService.getBodyDominiosVarios();
+            sBody.dominios = listaDominios;
             var data = await this.http(uri).post(null, sBody).then(function (response) {
                 var data = JSON.parse(response);
                 return data;
@@ -146,7 +160,7 @@ sap.ui.define([
                     return null;
                 }
             }).catch(function(error){
-                console.log("ERROR: TasaBackendService.obtenerDepartamentos: ", error);
+                console.log("ERROR: TasaBackendService.obtenerDatosDstrFlota: ", error);
                 return null
             });
             return data;
@@ -476,7 +490,7 @@ sap.ui.define([
             });
         },
 
-        obtenerListaDescargaPopUp: function (matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, user, nro_descarga) {
+        obtenerListaDescargaPopUp: function (matricula, nom_embarcacion, cod_planta, nom_planta, fecha_inicio, user, nro_descarga,estado) {
             var uri = UtilService.getHostService() + "/api/General/ConsultaGeneral/";
             var sBody = UtilService.getConsultaGeneral();
             sBody.nombreConsulta = "CONSGENLISTDESCPP";
@@ -486,6 +500,7 @@ sap.ui.define([
             sBody.parametro4 = nom_planta;
             sBody.parametro5 = fecha_inicio;
             sBody.parametro6 = nro_descarga;
+            sBody.parametro7 = estado;
             sBody.p_user = user;
             return this.http(uri).post(null, sBody).then(function (response) {
                 return response;
@@ -738,7 +753,7 @@ sap.ui.define([
                 console.log("ERROR: TasaBackendService.obtenerDatosPlantaDist 1: ", error);
                 return null;
             });
-            if(data){
+            if(data && data.length > 0){
                 var cdemp = data[0].CDEMP;
                 sBody.fields = ["DSEMP", "INPRP", "MANDT"];
                 sBody.option[0].wa = "CDEMP LIKE '" + cdemp + "'";
@@ -979,6 +994,37 @@ sap.ui.define([
             return data;
         },
 
+        obtenerEveElim: async function(marea, nroEvento, estructura, usuario){
+            var uri = UtilService.getHostService() + "/api/embarcacion/ObtenerEveElim/";
+            var sBody = UtilService.getBodyEveElim();
+            sBody.marea = marea;
+            sBody.numero_evento = nroEvento;
+            sBody.estructura = estructura;
+            sBody.usuario = usuario;
+            var data = await this.http(uri).post(null, sBody).then(function (response) {
+                var data = JSON.parse(response);
+                return data;
+            }).catch(function(error){
+                console.log("ERROR: TasaBackendService.obtenerEveElim: ", error);
+                return null
+            });
+            return data;
+        },
+
+        obtenerAlmExterno: async function(usuario){
+            var uri = UtilService.getHostService() + "/api/embarcacion/ObtenerAlmacenExterno/";
+            var sBody = UtilService.getBodyAlmExt();
+            sBody.usuario = usuario;
+            var data = await this.http(uri).post(null, sBody).then(function (response) {
+                var data = JSON.parse(response);
+                return data;
+            }).catch(function(error){
+                console.log("ERROR: TasaBackendService.ObtenerAlmacenExterno: ", error);
+                return null
+            });
+            return data;
+        },
+
         test: function () {
             var latiCalaD = "";
             var latiCalaM = "";
@@ -993,6 +1039,35 @@ sap.ui.define([
                 var data = JSON.parse(response);
                 return data;
             });
+        },
+        envioCorreoHoroAve: async function (nom_embarcacion, listaHoroAve) {
+            var uri = UtilService.getHostService() + "/api/correo/EnviarInfoHorometroAveriado";
+            var sBody = UtilService.getBodyCorreoHoroAve();
+            sBody.embarcacion.descripcion = nom_embarcacion;
+            sBody.embarcacion.eventos = listaHoroAve;
+            var data = await this.http(uri).post(null, sBody).then(function (response) {
+                var data = JSON.parse(response);
+                return data;
+            }).catch(function(error){
+                console.log("ERROR: TasaBackendService.envioCorreoHoroAve: ", error);
+                return null;
+            });
+            return data;
+        },
+
+        obtenerArmadorPropietario: async function(usuario){
+            var uri = UtilService.getHostService() + "/api/General/AyudasBusqueda";
+            var sBody = UtilService.getConsultaGeneral();
+            sBody.nombreAyuda = "BSQAMADORPROP";
+            sBody.p_user = usuario;
+            var data = await this.http(uri).post(null, sBody).then(function (response) {
+                var data = JSON.parse(response);
+                return data;
+            }).catch(function(error){
+                console.log("ERROR: TasaBackendService.obtenerArmadorPropietario: ", error);
+                return null;
+            });
+            return data;
         }
 
     });

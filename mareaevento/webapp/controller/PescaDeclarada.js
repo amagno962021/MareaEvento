@@ -97,7 +97,7 @@ sap.ui.define([
                     element.Editado = true;
                     element.PorcPesca = porcPesca;
                     element.CantPesca = cantTotal * (porcPesca * 0.01);
-                    element.CNPCM = element.CantPesca;
+                    element.CNPCM = Number(element.CantPesca).toFixed(2);
                 }
             }
             this._oView.getModel("eventos").updateBindings(true);
@@ -149,13 +149,13 @@ sap.ui.define([
             //refrescar modelo
         },
 
-        validarCantidadTotalPesca: function(){
+        validarCantidadTotalPesca:async function(){
             var bOk = true;
             this.oBundle = this.ctr.getOwnerComponent().getModel("i18n").getResourceBundle();
             var detalleMarea = this.ctr._FormMarea;//modelo de detalle de marea
             var indProp =  this.ctr._indicadorProp;//obtener indicador de propeidad del modelo de marea
             var cantTotal = 0;
-            cantTotal = this.obtenerCantTotalDeclMarea(0);
+            cantTotal = await this.obtenerCantTotalDeclMarea(0);
 
             if(indProp == "T" && (cantTotal == null || cantTotal == 0)){
                 var mssg = this.oBundle.getText("CANTPESCANOCERO");
@@ -165,7 +165,7 @@ sap.ui.define([
 
             return bOk;
         },
-        obtenerCantTotalDeclMarea :function(nroEventoTope){
+        obtenerCantTotalDeclMarea : async function(nroEventoTope){
             let cantTotal_v = Number(0);
             let codEventoCala = "3";
             let indActual = this.ctr._elementAct;
@@ -175,14 +175,19 @@ sap.ui.define([
 	
             for (let i = 0; i < nodoEventos.length; i++) {
                 let nroEvento = nodoEventos[i].NREVN;		
-                let tipoEvento = nodoEventos[i].CDTEV; 
+                let tipoEvento = nodoEventos[i].CDTEV;
+                this.ctr._elementAct = i; 
+                
                 if (tipoEvento == codEventoCala) {
+                    await this.ctr.obtenerPescaDeclarada();
                     if (eventoConsultado == nroEvento) {
                         if (nodoEventos[i].CantTotalPescDecla != null) {
-                            cantTotal += Number(nodoEventos[i].CantTotalPescDecla);
+                            let cantidadPescaDecl = nodoEventos[i].CantTotalPescDecla ? nodoEventos[i].CantTotalPescDecla : 0;
+                            cantTotal += Number(cantidadPescaDecl);
                         }
-                    } else {                    
-                          cantTotal += Number(nodoEventos[i].CantTotalPescDecla);
+                    } else {       
+                          let cantidadPescaDecl = nodoEventos[i].CantTotalPescDecla ? nodoEventos[i].CantTotalPescDecla : 0;             
+                          cantTotal += Number(cantidadPescaDecl);
                     }
                 } 
                 
@@ -195,9 +200,162 @@ sap.ui.define([
             cantTotal_v = cantTotal;
             
             this.ctr._FormMarea.CantTotalPescDecla = cantTotal;
-            return cantTotal_v;
-        }
+            this.ctr._elementAct = indActual;
 
+            return cantTotal_v;
+        },
+        buscarEspeciePopup: function (oEvent) {
+
+            let me = this;
+            me.getDialog_add_especie().open();
+            if (this.ctr._motivoMarea == "1") {
+                sap.ui.getCore().byId("fe_popup_cantPesca_2").setVisible(false);
+            
+                        
+            } else {
+                sap.ui.getCore().byId("fe_popup_cantPesca_2").setVisible(true);
+            }
+            
+		},
+        getDialog_add_especie: function () {
+            if (!this.oDialog_e) {
+                this.oDialog_e = sap.ui.xmlfragment("com.tasa.mareaevento.fragments.Popup_especie_pescaDcl", this);
+                this._oView.addDependent(this.oDialog_e);
+            }
+            return this.oDialog_e;
+        },
+        deleteItemsBiometria: function(oevent){
+            let tablaBio = this._oView.byId("tablePescaDesclarada");
+            let ListadeIndices  = tablaBio.getSelectedIndices();
+
+            /*****************************ELIMINACION DE PESCA DECLARADA************************************** */
+            let ListaPescaDecl = this._oView.getModel("eventos").getData().ListaPescaDeclarada;
+            for (var i = ListaPescaDecl.length - 1; i >= 0; i--) {
+                for (let index = 0; index < ListadeIndices.length; index++) {
+                    if(ListadeIndices[index] == i){
+                        ListaPescaDecl.splice(i, 1);
+                    }
+                    
+                }
+                    
+            }
+            this._oView.getModel("eventos").setProperty("/ListaPescaDeclarada",ListaPescaDecl);
+        },
+
+        obtenerEspecies: function(){
+            let nodoPescaDeclarada = this._oView.getModel("eventos").getData().ListaPescaDeclarada;
+			let motivoMarea = this.ctr._motivoMarea;
+			let especie = sap.ui.getCore().byId("cb_especies_espec_2").getSelectedKey();
+			let cantPesca = sap.ui.getCore().byId("ip_especies_cp_2").getValue();
+			let especiePermitida = this.ctr._listaEventos[this.ctr._elementAct].EspePermitida;//trae vacio
+            let bOk = true;
+            let Pesca= {};
+            
+            if(especie == ""){
+                let nomCampo = this.ctr.obtenerMensajesCamposValid("Especie");
+                let mensaje = this.ctr.oBundle.getText("MISSINGFIELD", nomCampo);
+                this.ctr.agregarMensajeValid("Error", mensaje);
+            }else{
+                for (let i = 0; i < nodoPescaDeclarada.length; i++) {			
+                    if (nodoPescaDeclarada[i].CDSPC == especie ) {
+                        bOk = false;
+                        let mensaje = this.ctr.oBundle.getText("EXISTEESPDECLARADA");
+                        this.ctr.agregarMensajeValid("Error", mensaje);
+                        break;
+                    }
+                                             
+                }
+            }
+			
+			
+			if (bOk) {
+				if (!this._containsKey(especiePermitida,especie)) {
+					let permisoEspecies = this.ctr._FormMarea.EspPermitida; //falta cargar data consultarPermisoPesca
+					let especieZonaPesca = this.ctr._listaEventos[this.ctr._elementAct].EspeZonaPesca;
+					let especieVeda = this.ctr._listaEventos[this.ctr._elementAct].EspeVeda;
+					let obsvEspecie = "";
+					let espOk = true;
+								
+					if (permisoEspecies == null || permisoEspecies.length == 0 || (permisoEspecies != null && !this._containsKey(permisoEspecies,especie))) {
+						espOk = false;
+						obsvEspecie += this.ctr.oBundle.getText("EMBNOPERMISOESP") + " ";
+					}
+					
+					if (especieZonaPesca == null || especieZonaPesca.length == 0 || (especieZonaPesca != null && !this._containsKey(especieZonaPesca,especie))) {
+						espOk = false;
+						obsvEspecie += this.ctr.oBundle.getText("ESPNOPERMITZONA") + " ";
+					}
+					
+					if ((especieVeda != null || especieVeda.length == 0) && this._containsKey(especieVeda,especie)) {
+						espOk = false;
+						obsvEspecie += this.ctr.oBundle.getText("ESPECIEENVEDA") + " ";
+					}
+				
+					if (!espOk) {
+						this.ctr._listaEventos[this.ctr._elementAct].ObseAdicional = this.ctr.oBundle.getText("OBSADICCALAESPNOVALIDA");
+						this.ctr.modeloVisible.VisibleObservAdicional = true;
+					}
+				
+					Pesca.Observacion =obsvEspecie;
+				}
+                if(motivoMarea == "2"){
+                    this.ctr._listaEventos[this.ctr._elementAct].ListaPescaDeclarada.push({
+                        CDSPC: especie,
+                        DSSPC: sap.ui.getCore().byId("cb_especies_espec_2").getSelectedItem().getText(),
+                        PorcPesca: "",
+                        CNPCM: Number(cantPesca).toFixed(2),
+                        DSUMD: this.ctr._ConfiguracionEvento.calaDescUMPescaDeclDesc,
+                        UnidMedida: this.ctr._ConfiguracionEvento.calaDescUMPescaDecl,
+                        ZMODA: "",
+                        OBSER: Pesca.Observacion,
+                        Indicador:"N"
+                     });
+
+                     let lista_PescaDecl = this.ctr._listaEventos[this.ctr._elementAct].ListaPescaDeclarada;
+                     let cantTotPescDcl = Number(0);
+                     for (let index = 0; index < lista_PescaDecl.length; index++) {
+                         const element = lista_PescaDecl[index];
+                         cantTotPescDcl = cantTotPescDcl + Number(element.CNPCM);
+                     }
+                     this.ctr._listaEventos[this.ctr._elementAct].CantTotalPescDecla = cantTotPescDcl;
+
+                }else{
+                    this.ctr._listaEventos[this.ctr._elementAct].ListaPescaDeclarada.push({
+                        CDSPC: especie,
+                        DSSPC: sap.ui.getCore().byId("cb_especies_espec_2").getSelectedItem().getText(),
+                        PorcPesca: "",
+                        CNPCM: "",
+                        DSUMD: this.ctr._ConfiguracionEvento.calaDescUMPescaDeclDesc,
+                        UnidMedida: this.ctr._ConfiguracionEvento.calaDescUMPescaDecl,
+                        ZMODA: "",
+                        OBSER: Pesca.Observacion,
+                        Indicador:"N"
+                     });
+                }
+				
+
+                 this._oView.getModel("eventos").updateBindings(true);
+                
+			}
+
+            this.getDialog_add_especie().close();
+        },
+
+        cerrarPopup_esp :function(){
+            this.getDialog_add_especie().close();
+        },
+        _containsKey :function(Lista_Busq,cod_especie){
+            let especieEncontrada = false;
+            for (let index = 0; index < Lista_Busq.length; index++) {
+                let codEspe = Lista_Busq[index].CodEspecie ? Lista_Busq[index].CodEspecie : Lista_Busq[index].CDSPC;
+                if(codEspe == cod_especie){
+                    especieEncontrada = true;
+                }
+            }
+
+            return especieEncontrada;
+
+        }
 
 
 	});

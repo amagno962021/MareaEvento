@@ -3,7 +3,8 @@
 	<m:Panel id="0008" expandable="false">
 		<m:content>
 			<Table
-				id="table"
+				class = "tableCol"
+				id="tablePescaDesclarada"
 				selectionMode="Single"
 				rows="{eventos>/ListaPescaDeclarada}"
 				visibleRowCount="7"
@@ -16,6 +17,15 @@
 						<m:Text text="TM"/>
 						<m:ToolbarSpacer/>
 					</m:OverflowToolbar>
+					<!-- <m:OverflowToolbar id="ext_botonesPescaDcl" style="Clear">
+							<m:Button text="Agregar" icon="sap-icon://add" press=".buscarEspeciePopup">
+								<m:customData>
+									<core:CustomData key="multi" value="true" />
+								</m:customData>
+							</m:Button>
+							<m:Button text="Eliminar" type="Reject" icon="sap-icon://decline" tooltip="Clear all filters" press=".deleteItemsBiometria" />
+
+					</m:OverflowToolbar> -->
 				</extension>
 				<columns>
 					<Column
@@ -47,7 +57,7 @@
 						filterProperty="Available">
 						<m:Label text="Pesca declarada" />
 						<template>
-							<m:Input id="prueba" value="{eventos>CNPCM}" type="Number" showValueHelp="false" enabled="{eventos>/enabledCantPescDeclarada}" visible="true"/>
+							<m:Input id="prueba" value="{eventos>CNPCM}" type="Number" showValueHelp="false" enabled="{eventos>/enabledCantPescDeclarada}" visible="true" textAlign="Right"/>
 						</template>
 					</Column>
 					<Column
@@ -69,8 +79,7 @@
 						</template>
 					</Column>
 					<Column
-						width="10rem"
-						hAlign="End">
+						width="30rem">
 						<m:Label text="Observacion" />
 						<template>
 							<m:Text text="{eventos>OBSER}" wrapping="false" />

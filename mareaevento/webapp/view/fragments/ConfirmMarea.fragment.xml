@@ -21,7 +21,7 @@
 									<Label text="Estado de Marea" width="100%"/>
 								</form:label>
 								<form:fields>
-									<ComboBox width="auto" selectedKey="{DetalleMarea>/Form/ESMAR}" items="{DetalleMarea>/Config/datosCombo/EstMar}" enabled="true">
+									<ComboBox id="estadoMar" width="auto" selectedKey="{DetalleMarea>/Form/ESMAR}" items="{DetalleMarea>/Config/datosCombo/EstMar}" enabled="true">
 										<items>
 											<core:Item key="{DetalleMarea>id}" text="{DetalleMarea>descripcion}" />
 										</items>
@@ -33,7 +33,7 @@
 									<Label text="Observación" width="100%"/>
 								</form:label>
 								<form:fields>
-									<TextArea id="txtObsComb" value="{DetalleMarea>/Form/OBSCOMB}"  width="100%"/>
+									<TextArea id="txtObsCombMarea" value="{DetalleMarea>/Form/OBSCOMB}"  width="100%"/>
 								</form:fields>
 							</form:FormElement>
 						</form:formElements>
@@ -46,10 +46,10 @@
 			</form:Form>
 		</content>
 		<beginButton>
-			<Button type="Emphasized" id="btnConfirmSave" text="Aceptar" press="onCloseConfirm" enabled="true"></Button>
+			<Button type="Emphasized" id="btnConfirmSaveMarea" text="Aceptar" press="onCloseConfirmMarea" enabled="true"></Button>
 		</beginButton>
 		<endButton>
-			<Button text="Cancelar" press="onCancelConfirm"></Button>
+			<Button text="Cancelar" press="onCancelConfirmMarea"></Button>
 		</endButton>
 	</Dialog>
 </core:FragmentDefinition>

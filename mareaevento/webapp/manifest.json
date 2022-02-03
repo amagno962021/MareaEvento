@@ -84,41 +84,54 @@
             "config": {
                 "routerClass": "sap.m.routing.Router",
                 "viewType": "XML",
-                "async": true,
                 "viewPath": "com.tasa.mareaevento.view",
-                "controlAggregation": "pages",
-                "controlId": "app",
-                "clearControlAggregation": false
+                "targetAggregation": "pages"
             },
             "routes": [
                 {
-                    "name": "RouteMarea",
-                    "pattern": "RouteMarea",
-                    "target": [
-                        "TargetMarea"
-                    ]
+                    "name": "Main",
+                    "view": "Main",
+                    "pattern": "",
+                    "targetAggregation": "pages",
+                    "controlId": "app"
                 },
                 {
-                    "pattern": "RouteEvento",
-                    "name": "RouteEvento",
+                    "name": "Marea",
+                    "view": "Marea",
+                    "pattern": "Marea",
+                    "targetAggregation": "pages",
+                    "controlId": "app"
+                },
+                {
+                    "name": "Evento",
+                    "view": "Evento",
+                    "pattern": "Evento",
+                    "targetAggregation": "pages",
+                    "controlId": "app"
+                },
+                {
+                    "name": "DetalleEventoExt",
+                    "pattern": "DetalleEventoExt/:nrmar:",
                     "target": [
-                        "TargetEvento"
-                    ]
+						"DettalleEventoExt"
+					]
+                },
+                {
+                    "name": "test",
+                    "view": "test",
+                    "pattern": "test",
+                    "targetAggregation": "pages",
+                    "controlId": "app"
                 }
             ],
             "targets": {
-                "TargetMarea": {
-                    "viewType": "XML",
-                    "transition": "slide",
-                    "clearControlAggregation": false,
-                    "viewName": "Marea"
-                },
-                "TargetEvento": {
-                    "viewType": "XML",
-                    "transition": "slide",
-                    "clearControlAggregation": false,
-                    "viewName": "Evento",
-                    "viewLevel": 2
+                "DettalleEventoExt": {
+                    "controlAggregation": "pages",
+					"viewName": "DetalleMareaExt",
+					"viewId": "DetalleMareaExt",
+					"viewLevel": 2,
+					"transition": "slide",
+                    "controlId": "app"
                 }
             }
         },

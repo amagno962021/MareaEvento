@@ -34,7 +34,7 @@ sap.ui.define([
                 value = value.trim();		
                 type = this.getFormatGeo(value);
                 if (type != null) {
-                    return Number(value.substring(0, 3));
+                    return value.substring(0, 3);
                 }
             }
             return 0;
@@ -47,9 +47,9 @@ sap.ui.define([
                 type = this.getFormatGeo(value);
                 if (type != null) {
                     if (type == "D") {
-                        return Number(value.substring(3));
+                        return value.substring(3);
                     } else if (type == "G") {
-                        return Number(value.substring(4, 7));
+                        return value.substring(4, 7);
                     }
                 } 
             }
@@ -137,7 +137,7 @@ sap.ui.define([
                 let minutos = date.getMinutes();
                 let segundos = date.getSeconds();
                 let strHor = "";
-                if(hora > 0 && hora < 10){
+                if(hora >= 0 && hora < 10){
                     strHor = "0" + hora;
                 }else{
                     strHor = hora;
@@ -160,7 +160,7 @@ sap.ui.define([
             }
         },
 
-        strDateToSapDate: function(date){
+        strDateToSapDate: function(date){ //dd/MM/yyyy
             let p_fecha = date + "";
             var newDate = "";
             if(p_fecha.length > 8){
@@ -198,11 +198,44 @@ sap.ui.define([
 
         getEtiqueta: function(path){
             var etiqueta = "";
-            if(etiqueta == "/DatosGenerales/CDEMB"){
+            if(path == "/Form/CDEMB"){
                 etiqueta = "Embarcación";
             }
-            if(etiqueta == "/DatosGenerales/CDEMP"){
+            if(path == "/Form/CDMMA"){
+                etiqueta = "Motivo de Marea";
+            }
+            if(path == "/Form/INUBC"){
+                etiqueta = "Ubicación de Pesca";
+            }
+            if(path == "/Form/RUC"){
+                etiqueta = "R.U.C";
+            }
+            if(path == "/Form/RAZON"){
+                etiqueta = "Razón Social";
+            }
+            if(path == "/Form/CALLE"){
+                etiqueta = "Calle";
+            }
+            if(path == "/Form/DISTRITO"){
+                etiqueta = "Distrito";
+            }
+            if(path == "/Form/PROVINCIA"){
+                etiqueta = "Provincia";
+            }
+            if(path == "/Form/DEPARTAMENTO"){
+                etiqueta = "Departamento";
+            }
+            if(path == "/Form/CDEMP"){
                 etiqueta = "Armador Comercial";
+            }
+            if(path == "/Form/FIMAR"){
+                etiqueta = "Fecha de Inicio";
+            }
+            if(path == "/Form/FFMAR"){
+                etiqueta = "Fecha de Fin";
+            }
+            if(path == "/Form/HIMAR"){
+                etiqueta = "Hora de Inicio";
             }
 
             return etiqueta;
@@ -288,7 +321,121 @@ sap.ui.define([
         },
         convKmAMillNaut :function(km){
             return km/1.852;
-        }
+        },
+        formatHoraBTP : function(hora){
+            let horaFormat = ""
+            let hora_size = hora.length
+
+            if(hora_size == 6 || hora_size == 4){
+                let c_hora = hora + "";
+                let hour_v = c_hora.substr(0,2);
+                let minute_v = c_hora.substr(2,2);
+                horaFormat = hour_v + ":" + minute_v ;
+            }
+            else{
+                horaFormat = hora;
+            }
+
+            return horaFormat;
+        },
+        formatfechaBTP : function(fecha){
+            let fechaFormat = ""
+            let fecha_size = fecha.length
+
+            if(fecha_size == 8){
+                let c_fecha = fecha + "";
+                let dia_v = c_fecha.substr(6,2);
+                let mes_v = c_fecha.substr(4,2);
+                let anio_v = c_fecha.substr(0,4);
+                fechaFormat = dia_v + "/" + mes_v + "/" + anio_v;
+            }
+            else{
+                fechaFormat = fecha;
+            }
+
+            return fechaFormat;
+        },
+        formatCoordenadaBTP : function(cord){
+            let cordenada = ""
+            let coord_size = cord.length
+
+            if(coord_size == 7){
+                let c_coord = cord + "";
+                let gra_v = c_coord.substr(0,3);
+                let min_v = c_coord.substr(4,2);
+                cordenada = gra_v + min_v;
+            }
+            else{
+                cordenada = fecha;
+            }
+
+            return cordenada;
+        },
+
+        formatoNroEvento : function(nro_evn){
+            let ne = Number(nro_evn);
+            let ne_format = "";
+            if(ne<10){
+                ne_format = "0" + ne;
+            }else{
+                ne_format = ne;
+            }
+            return ne_format;
+        },
+        formatoPescaDcl : function(numero){
+            let num_format = "" + numero;
+            let v_n = num_format.split(".");
+            let v_decimal = v_n[1] ? v_n[1].length : 0;
+            if(v_decimal == 0){
+                num_format = numero + ".000";
+            }else{
+                num_format = numero;
+            }
+            return num_format;
+        },
+
+        formatGraInput :function(gra){
+            let val = "";
+            let n_lat = Number(gra);
+
+            if(n_lat<10){
+                val = "00" + n_lat;
+            }else if(10 <= n_lat && n_lat > 100){
+                val = "0" + n_lat;
+            }else{
+                val = n_lat;
+            }
+            return val;
+
+        },
+
+        formatMinInput :function(min){
+            let val = "";
+            let n_lat = Number(min);
+
+            if(n_lat<10){
+                val = "0" + n_lat;
+            }else if(10 <= n_lat && n_lat > 100){
+                val = n_lat;
+            }
+            return val;
+
+        },
+        formatoDosDecimales : function(numero){
+            let num_format = "" + numero;
+            let v_n = num_format.split(".");
+            let v_decimal = v_n[1] ? v_n[1].length : 0;
+            if(v_decimal == 0){
+                num_format = numero + ".00";
+            }else{
+                if(v_decimal ==  1 ){
+                    num_format = num_format + "0";
+                }else{
+                    num_format = numero;
+                }
+            }
+            return num_format;
+        },
 
 
     }

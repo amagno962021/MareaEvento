@@ -191,7 +191,7 @@ sap.ui.define([
             mod.setProperty("/Utils/TipoConsulta", "C");
             //mod.setProperty("/Utils/TipoEvento","6");
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            oRouter.navTo("DetalleEvento");
+            oRouter.navTo("Evento");
             this.getNuevoEvento().close();
 
         },
@@ -749,12 +749,12 @@ sap.ui.define([
             modelo.setProperty("/Utils/TipoConsulta", "E");
             modelo.setProperty("/Eventos/LeadSelEvento", indexEvento);
             var oRouter = sap.ui.core.UIComponent.getRouterFor(this);
-            oRouter.navTo("DetalleEvento");
+            oRouter.navTo("Evento");
         },
 
         onSave: async function () {
             var modelo = this.getOwnerComponent().getModel("DetalleMarea");
-            var validarMareaEventos = sap.ui.controller("com.tasa.registroeventospescav2.controller.DetalleEvento").validarMareaEventos(this);
+            var validarMareaEventos = sap.ui.controller("com.tasa.registroeventospescav2.controller.Evento").validarMareaEventos(this);
             var tieneErrores = modelo.getProperty("/Cabecera/TERRORES");
             if (validarMareaEventos) {
                 if (!tieneErrores) {
@@ -906,8 +906,8 @@ sap.ui.define([
             var eventos = modelo.getProperty("/Eventos/Lista");
             var estadoMarea = modelo.getProperty("/DatosGenerales/ESMAR");
             var ultimoEvento = eventos[eventos.length - 1];
-            var cantTotalDeclMarea = sap.ui.controller("com.tasa.registroeventospescav2.controller.DetalleEvento").obtenerCantTotalPescaDecla(0, this);
-            var cantTotalDeclDescMarea = sap.ui.controller("com.tasa.registroeventospescav2.controller.DetalleEvento").obtenerCantTotalPescaDeclDesc(0, this);
+            var cantTotalDeclMarea = sap.ui.controller("com.tasa.registroeventospescav2.controller.Evento").obtenerCantTotalPescaDecla(0, this);
+            var cantTotalDeclDescMarea = sap.ui.controller("com.tasa.registroeventospescav2.controller.Evento").obtenerCantTotalPescaDeclDesc(0, this);
             var motivoMarea = modelo.getProperty("/Cabecera/CDMMA");
             var motivoMarPesca = ["1", "2"];
             var motivoCalaSDes = ["4", "5", "6"];

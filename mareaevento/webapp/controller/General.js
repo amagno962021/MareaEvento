@@ -1,5 +1,5 @@
 sap.ui.define([
-	"sap/ui/base/ManagedObject",
+    "sap/ui/base/ManagedObject",
     "sap/ui/model/json/JSONModel",
     "sap/m/MessageToast",
     "sap/ui/integration/library",
@@ -12,8 +12,8 @@ sap.ui.define([
     "sap/m/MessageBox",
     "./Utils",
     'sap/ui/core/BusyIndicator',
-], function(
-	ManagedObject,
+], function (
+    ManagedObject,
     JSONModel,
     MessageToast,
     integrationLibrary,
@@ -27,9 +27,9 @@ sap.ui.define([
     Utils,
     BusyIndicator
 ) {
-	"use strict";
+    "use strict";
 
-	return ManagedObject.extend("com.tasa.mareaevento.controller.General", {
+    return ManagedObject.extend("com.tasa.mareaevento.controller.General", {
 
         constructor: function (oView, sFragName, o_this) {
 
@@ -337,7 +337,7 @@ sap.ui.define([
                 } else {
                     eventoActual.ValiCoordCala = false;
                     let mssg = that.ctr.oBundle.getText("NODATACOORDCOSTA");
-                    that.ctr.agregarMensajeValid("Error", mssg);
+                    that.ctr.agregarMensajeValid("Warning", mssg);
                     //MessageBox.error(mssg);
                 }
 
@@ -350,111 +350,131 @@ sap.ui.define([
         },
 
         onActionSelectTab: async function (tab_seleccionado, event) {
-            let mod = this.ctr.getOwnerComponent().getModel("DetalleMarea");
-            mod.setProperty("/Utils/MessageItemsEP", []);
-            this.ctr.resetearValidaciones();
-            BusyIndicator.show(0);
-            this.nextTab = tab_seleccionado;
-            if (this.previousTab == undefined) {
-                this.previousTab = "General";
-            }
-            var visible = this.ctr.modeloVisible;//modelo visible
-            var eventoActual = this.ctr._listaEventos[this.ctr._elementAct]; //nodo evento actual
-            var motivoEnCalend = ["1", "2", "8"]; // Motivos de marea con registros en calendario
-            var detalleMarea = this.ctr._FormMarea;//modelo detalle marea
-            if (!this.ctr._soloLectura) {
-                visible.LinkRemover = false;
-                visible.LinkDescartar = false;
-                var tipoEvento = eventoActual.CDTEV;
-                var motivoMarea = detalleMarea.CDMMA;
-                var fechEvento = new Date(eventoActual.FIEVN);
-                if (this.previousTab == "General") {
-                    //var validarStockCombustible = await this.validarStockCombustible();
-                    let val = await this.validarCamposGeneral(true);
-                    if (!val) {
-                        this.nextTab = this.previousTab;
-                    } else if (tipoEvento == "6" && motivoEnCalend.includes(motivoMarea)) {
+            if(this.ctr.validacioncampos == true){
+                let params = event.mParameters;
+                let mod = this.ctr.getOwnerComponent().getModel("DetalleMarea");
+                mod.setProperty("/Utils/MessageItemsEP", []);
+                this.ctr.resetearValidaciones();
+                BusyIndicator.show(0);
+                this.nextTab = tab_seleccionado;
+                if (this.previousTab == undefined) {
+                    this.previousTab = "General";
+                }
+                var visible = this.ctr.modeloVisible;//modelo visible
+                var eventoActual = this.ctr._listaEventos[this.ctr._elementAct]; //nodo evento actual
+                var motivoEnCalend = ["1", "2", "8"]; // Motivos de marea con registros en calendario
+                var detalleMarea = this.ctr._FormMarea;//modelo detalle marea
+                if (!this.ctr._soloLectura) {
+                    visible.LinkRemover = false;
+                    visible.LinkDescartar = false;
+                    var tipoEvento = eventoActual.CDTEV;
+                    var motivoMarea = detalleMarea.CDMMA;
+                    var fechEvento = eventoActual.FIEVN == null ? null : eventoActual.FIEVN;
+                    if (this.previousTab == "General") {
+                        //var validarStockCombustible = await this.validarStockCombustible();
+                        let val = await this.validarCamposGeneral(true);
+                        if (!val) {
+                            this.nextTab = this.previousTab;
+                        } else if (tipoEvento == "6" && motivoEnCalend.includes(motivoMarea)) {
+                            visible.visibleDescarga = false;
+                            visible.FechFin = false;
+                            //var verificarTemporada = this.verificarTemporada(motivoMarea, fechEvento);
+                            if (fechEvento && !(this.verificarTemporada(motivoMarea, fechEvento))) {
+                                this.nextTab = this.previousTab;
+                            }
+                        } else if (tipoEvento == "5" && visible.TabHorometro) {
+                            let validarStockCombustible = await this.validarStockCombustible();
+                            if(!validarStockCombustible){
+                                visible.visibleDescarga = true;
+                                this.nextTab = this.previousTab;
+                            }
+                        }
+                    }
+
+                    if (tipoEvento == "3" && this.nextTab !== this.previousTab) {
+                        if (motivoMarea == "1") {
+                            var bOk = true;
+                            this.ctr.Dat_Horometro.calcularCantTotalBodegaEve();
+                            var validarBodegas = this.ctr.Dat_PescaDescargada.validarBodegas(true);
+                            if(!validarBodegas &&  this.previousTab == "Distribucion"){
+                                this.nextTab = this.previousTab;
+                            }else{
+                                if (bOk && this.previousTab == "General" && this.nextTab == "Pesca declarada" && !validarBodegas) {
+                                    this.nextTab = "Distribucion";
+                                }
+    
+                                if (this.previousTab == "Distribucion" && this.nextTab == "Pesca declarada" && !validarBodegas) {
+                                    this.nextTab = this.previousTab;
+                                }
+    
+                                if (bOk && this.previousTab == "Distribucion" && this.nextTab != "Biometria" && !validarBodegas) {
+                                    this.nextTab = this.previousTab;
+                                }
+                                this.ctr.Dat_PescaDeclarada.calcularPescaDeclarada();
+                            }
+                            
+                        } else if (motivoMarea == "2") {
+                            this.ctr.Dat_PescaDeclarada.calcularCantTotalPescDeclEve();
+                        }
+
+                        //var valCantTotPesca = this.ctr.Dat_PescaDeclarada.validarCantidadTotalPesca();
+                        if (this.previousTab != "General") {
+                            if(this.ctr._indicadorProp == "T" && (await !this.ctr.Dat_PescaDeclarada.validarCantidadTotalPesca())){
+                                this.nextTab = "Pesca declarada";
+                            }else if((await !this.ctr.Dat_PescaDeclarada.validarCantidadTotalPesca())){
+                                this.nextTab = this.previousTab;
+                            }
+                        }
+
+                        if ((this.nextTab == "Pesca declarada" && eventoActual.ObteEspePermitidas) ||
+                            (this.nextTab == "Biometria" && eventoActual.ObteEspePermitidas)) {
+                            await this.obtenerTemporadas(motivoMarea, eventoActual.FIEVN);
+                            await this.obtenerTemporadas("8", eventoActual.FIEVN);
+                            await this.consultarPermisoPesca(this.ctr._embarcacion, motivoMarea);
+                            this.obtenerEspeciesPermitidas();//obtenerEspeciesPermitidas - falta metodo
+                        }
+                    }
+
+                    if (tipoEvento == "6" && this.nextTab == "Horómetro" && eventoActual.NroDescarga) {
                         visible.visibleDescarga = false;
-                        visible.FechFin = false;
-                        var verificarTemporada = this.verificarTemporada(motivoMarea, fechEvento);
-                        if (fechEvento && !verificarTemporada) {
-                            this.nextTab = this.previousTab;
-                        }
-                    } else if (tipoEvento == "5" && visible.TabHorometro) {
-                        let validarStockCombustible = await this.validarStockCombustible();
-                        if(!validarStockCombustible){
-                            visible.visibleDescarga = true;
-                            this.nextTab = this.previousTab;
-                        }
-                    }
-                }
-
-                if (tipoEvento == "3" && this.nextTab !== this.previousTab) {
-                    if (motivoMarea == "1") {
-                        var bOk = true;
-                        this.ctr.Dat_Horometro.calcularCantTotalBodegaEve();
-                        var validarBodegas = this.ctr.Dat_PescaDescargada.validarBodegas(true);
-                        if (bOk && this.previousTab == "General" && this.nextTab == "Pesca declarada" && !validarBodegas) {
-                            this.nextTab = "Distribucion";
-                        }
-
-                        if (this.previousTab == "Distribucion" && this.nextTab == "Pesca declarada" && !validarBodegas) {
-                            this.nextTab = this.previousTab;
-                        }
-
-                        if (bOk && this.previousTab == "Distribucion" && this.nextTab != "Biometria" && !validarBodegas) {
-                            this.nextTab = this.previousTab;
-                        }
-                        this.ctr.Dat_PescaDeclarada.calcularPescaDeclarada();
-                    } else if (motivoMarea == "2") {
-                        this.ctr.Dat_PescaDeclarada.calcularCantTotalPescDeclEve();
+                        visible.fechFin = false;
+                        this.nextTab = "Pesca descargada";
                     }
 
-                    //var valCantTotPesca = this.ctr.Dat_PescaDeclarada.validarCantidadTotalPesca();
-                    if (this.previousTab != "General" && (!this.ctr.Dat_PescaDeclarada.validarCantidadTotalPesca())) {
+                    if (this.previousTab == "Horómetro" && (!(this.ctr.Dat_Horometro.validarLecturaHorometros()) || !(await this.ctr.Dat_Horometro.validarHorometrosEvento()))) {
                         this.nextTab = this.previousTab;
                     }
 
-                    if ((this.nextTab == "PescaDeclarada" && eventoActual.ObteEspePermitidas) ||
-                        (this.nextTab == "Biometria" && eventoActual.ObteEspePermitidas)) {
-                        await this.obtenerTemporadas(motivoMarea, eventoActual.FIEVN);
-                        await this.obtenerTemporadas("8", eventoActual.FIEVN);
-                        await this.consultarPermisoPesca(this.ctr._embarcacion, motivoMarea);
-                        this.obtenerEspeciesPermitidas();//obtenerEspeciesPermitidas - falta metodo
+                    if (this.nextTab == "Pesca descargada") {
+                        this.prepararInputsDescargas();
                     }
-                }
 
-                if (tipoEvento == "6" && this.nextTab == "Horometro" && eventoActual.NroDescarga) {
-                    visible.visibleDescarga = false;
-                    visible.fechFin = false;
-                    this.nextTab = "Pesca descargada";
-                }
+                    if (this.previousTab == "Pesca descargada" && !this.ctr.Dat_PescaDescargada.validarPescaDescargada()) {
+                        this.nextTab = this.previousTab;
+                    }
 
-                if (this.previousTab == "Horometro" && (!(this.ctr.Dat_Horometro.validarLecturaHorometros()) || !(await this.ctr.Dat_Horometro.validarHorometrosEvento()))) {
-                    this.nextTab = this.previousTab;
-                }
+                    if (this.previousTab == "Siniestro" && !this.ctr.Dat_Siniestro.validarSiniestros()) {
+                        this.nextTab = this.previousTab;
+                    }
 
-                if (this.nextTab == "Pesca descargada") {
-                    this.prepararInputsDescargas();
                 }
+                this.previousTab = this.nextTab;
+                this.ctr.modeloVisibleModel.refresh();
 
-                if (this.previousTab == "Pesca descargada" && !this.ctr.Dat_PescaDescargada.validarPescaDescargada()) {
-                    this.nextTab = this.previousTab;
-                }
-
-                if (this.previousTab == "Siniestro" && !this.ctr.Dat_Siniestro.validarSiniestros()) {
-                    this.nextTab = this.previousTab;
-                }
-
+                let tabRedirect = this.buscarCodTab(textValidaciones.KeyTabs, this.nextTab)
+                let id_val = params.id;
+                console.log("id_log : " + id_val + " reirect : " + tabRedirect);
+                let o_iconTabBar = sap.ui.getCore().byId(id_val);
+                o_iconTabBar.setSelectedKey(tabRedirect);
+                BusyIndicator.hide();
+                //refrescar modelos
+            }else{
+                let tabRedirect = event.getParameter("previousKey");
+                let id_val = event.getParameter("id");
+                console.log("id_log : " + id_val + " reirect : " + tabRedirect);
+                let o_iconTabBar = sap.ui.getCore().byId(id_val);
+                o_iconTabBar.setSelectedKey(tabRedirect);
             }
-            this.previousTab = this.nextTab;
-            this.ctr.modeloVisibleModel.refresh();
-
-            let tabRedirect = this.buscarCodTab(textValidaciones.KeyTabs, this.nextTab)
-            let o_iconTabBar = sap.ui.getCore().byId("__xmlview3--Tab_eventos");
-            o_iconTabBar.setSelectedKey(tabRedirect);
-            BusyIndicator.hide();
-            //refrescar modelos
         },
 
         prepararInputsDescargas: function () {
@@ -570,6 +590,9 @@ sap.ui.define([
                     codTemp = "V";
                 }
             }
+            if(fecha.length == 10){
+                fecha = Utils.strDateToSapDate(fecha);
+            }
 
             await TasaBackendService.obtenerTemporadas(codTemp, fecha).then(function (response) {//14.12.2021
                 //obtener repsonse
@@ -631,8 +654,8 @@ sap.ui.define([
                 var difHoras = difHorasLong / (1000 * 60 * 60);
                 var calActual = new Date();
                 var fechaActual = Utils.strDateToSapDate(Utils.dateToStrDate(calActual));
-                var embarcacion = mod.getProperty("/Cabecera/CDEMB");
-                var motMarea = mod.getProperty("/Cabecera/CDMMA");
+                var embarcacion = mod.getProperty("/Form/CDEMB");
+                var motMarea = mod.getProperty("/Form/CDMMA");
                 var obtenerconsTeorico = await TasaBackendService.obtenerconsTeorico(embarcacion, motMarea, eventoActual.CDPTO, fechaActual);
                 if (obtenerconsTeorico.length > 0) {
                     var consTeorComb = obtenerconsTeorico[0].CSTEO * difHoras;
@@ -727,10 +750,10 @@ sap.ui.define([
             this.ctr.calendarioPescaVED;
             for (let index = 0; index < listCalendario.length; index++) {
                 const element = listCalendario[index];
-                var latiIni = element.LTINI;
-                var latiFin = element.LTFIN;
-                var longIni = element.LNINI;
-                var longFin = element.LGFIN;
+                var latiIni = Utils.formatCoordenadaBTP(element.LTINI);
+                var latiFin = Utils.formatCoordenadaBTP(element.LTFIN);
+                var longIni = Utils.formatCoordenadaBTP( element.LNINI);
+                var longFin = Utils.formatCoordenadaBTP(element.LGFIN);
                 if (((latiIni < latiIniZonaPesca && latiFin > latiIniZonaPesca) ||
                     (latiIni >= latiIniZonaPesca && latiIni < latiFinZonaPesca)) &&
                     ((longIni < longIniZonaPesca && longFin > longIniZonaPesca) ||
@@ -783,7 +806,7 @@ sap.ui.define([
                                     var obj = {
                                         INDTR: "N",
                                         CDSPC: especie.toString(),
-                                        DSSPC: descEspecie,
+                                        DSSPC: element1.DSSPC,
                                         UnidMedida: confEventosPesca.calaDescUMPescaDecl,
                                         DSUMD: confEventosPesca.calaDescUMPescaDeclDesc
                                     };
@@ -791,7 +814,7 @@ sap.ui.define([
 
                                     var objBiometria = {
                                         CodEspecie: especie.toString(),
-                                        Especie: element1.DescEspecie
+                                        Especie: element1.DSSPC
                                     };
                                     listaBiometria.push(objBiometria);
                                 }
@@ -808,6 +831,8 @@ sap.ui.define([
                             if (element.CDSPC != especieDef) {
                                 espOk = false;
                                 obsvEspecie += this.oBundle.getText("EMBNOPERMISOESP");
+                            }else if(element.CDSPC == especieDef){
+                                espOk = true;
                                 break;
                             }
                         }
@@ -817,6 +842,8 @@ sap.ui.define([
                             if (element.CDSPC != especieDef) {
                                 espOk = false;
                                 obsvEspecie += this.oBundle.getText("ESPNOPERMITZONA");
+                            }else if(element.CDSPC == especieDef){
+                                espOk = true;
                                 break;
                             }
                         }
@@ -827,6 +854,8 @@ sap.ui.define([
                                 if (element.CDSPC != especieDef) {
                                     espOk = false;
                                     obsvEspecie += this.oBundle.getText("ESPECIEENVEDA");
+                                }else if(element.CDSPC == especieDef){
+                                    espOk = true;
                                     break;
                                 }
                             }
@@ -875,7 +904,84 @@ sap.ui.define([
         prueba : function(){
             let valor = sap.ui.getCore().byId("dtp_fechaIniCala").getValue();
             console.log("Holaaaaaaaaaaaa : " + valor);
+        },
+        valStock_gen :function(){
+            this.ctr.validacionStock();
+        },
+        validarLat : function(evt){
+            let id = evt.getParameter("id");
+            let valorlat =  sap.ui.getCore().byId(id).getValue() ?  Number(sap.ui.getCore().byId(id).getValue()) + "" : "0";
+            if(Number.isInteger(valorlat) || Number(valorlat) < 0){
+                sap.ui.getCore().byId(id).setValueState( sap.ui.core.ValueState.Error);
+                sap.ui.getCore().byId(id).setValueStateText("Introduzca un valor entero positivo");
+                this.ctr.validacioncampos = false;
+                
+            }else{
+                if(valorlat.length > 2){
+                    sap.ui.getCore().byId(id).setValueState( sap.ui.core.ValueState.Error);
+                    sap.ui.getCore().byId(id).setValueStateText("Introduzca un valor entero positivo de dos dígitos");
+                    this.ctr.validacioncampos = false;
+                }else{
+                    sap.ui.getCore().byId(id).setValueState( sap.ui.core.ValueState.None);
+                    let Lat1 = this.ctr.byId("ip_latitud1").getValue() ? Number(this.ctr.byId("ip_latitud1").getValue()) + "": "0";
+                    let Lat2 = this.ctr.byId("ip_latitud2").getValue() ? Number(this.ctr.byId("ip_latitud2").getValue()) + "": "0";
+                    let Long1 = this.ctr.byId("ip_longitud1").getValue() ? Number(this.ctr.byId("ip_longitud1").getValue()) + "": "0";
+                    let Long2 = this.ctr.byId("ip_longitud2").getValue() ? Number(this.ctr.byId("ip_longitud2").getValue()) + "": "0";
+                    if(Lat1.length < 4 && Long1.length < 4 && Lat2.length < 3 && Long2.length < 3){
+                        this.ctr.validacioncampos = true;
+                    }
+                }
+                
+            }
+
+        },
+        validarLong : function(evt){
+            let id = evt.getParameter("id");
+            let valorlat =  sap.ui.getCore().byId(id).getValue() ?  Number(sap.ui.getCore().byId(id).getValue()) + "" : "0";
+            if(Number.isInteger(valorlat) || Number(valorlat) < 0){
+                sap.ui.getCore().byId(id).setValueState( sap.ui.core.ValueState.Error);
+                sap.ui.getCore().byId(id).setValueStateText("Introduzca un valor entero positivo");
+                this.ctr.validacioncampos = false;
+                
+            }else{
+                if(valorlat.length > 3){
+                    sap.ui.getCore().byId(id).setValueState( sap.ui.core.ValueState.Error);
+                    sap.ui.getCore().byId(id).setValueStateText("Introduzca un valor entero positivo de tres dígitos");
+                    this.ctr.validacioncampos = false;
+                }else{
+                    sap.ui.getCore().byId(id).setValueState( sap.ui.core.ValueState.None);
+                    let Lat1 = this.ctr.byId("ip_latitud1").getValue() ? Number(this.ctr.byId("ip_latitud1").getValue()) + "": "0";
+                    let Lat2 = this.ctr.byId("ip_latitud2").getValue() ? Number(this.ctr.byId("ip_latitud2").getValue()) + "": "0";
+                    let Long1 = this.ctr.byId("ip_longitud1").getValue() ? Number(this.ctr.byId("ip_longitud1").getValue()) + "": "0";
+                    let Long2 = this.ctr.byId("ip_longitud2").getValue() ? Number(this.ctr.byId("ip_longitud2").getValue()) + "": "0";
+                    if(Lat1.length < 4 && Long1.length < 4 && Lat2.length < 3 && Long2.length < 3){
+                        this.ctr.validacioncampos = true;
+                    }
+                    
+                }
+                
+            }
+
+        },
+        cargarStockFormat :function(evt){
+            let id = evt.getParameter("id");
+            let valorstock =  sap.ui.getCore().byId(id).getValue();
+            let val = Number(valorstock);
+            let n_valorstock  = new Intl.NumberFormat('es-MX').format(val);
+            this._oView.getModel("eventos").setProperty("/DESSTCMB", n_valorstock);
+        },
+
+        validarFechaEnvIni :function(){
+            this.ctr.validarFechaEnvIni_Det();
+        },
+
+        validarFechaEnvFin : function(){
+            this.ctr.validarFechaEnvFin_Det();
+        },
+        validarFechaCalas_Evn :function(){
+            this.ctr.validarFechaCalas();
         }
 
-	});
+
+    });
 });
